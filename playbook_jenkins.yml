@@ -1,0 +1,48 @@
+---
+ - hosts: Jenkins
+   user: root
+   tasks:
+
+   - name: Instalação de componentes
+     yum:
+      name: yum-utils 
+      name: device-mapper-persistent-data 
+      name: lvm2
+
+   - name: Add repositorio        
+     get_url:
+       url: https://download.docker.com/linux/centos/docker-ce.repo
+       dest: /etc/yum.repos.d/docker-ce.repo
+
+   - name: Instalação Docker e componentes
+     yum:
+      name: docker-ce
+
+   - name: Start service Docker, if not started
+     service:
+      name: docker
+      state: started
+
+   - name: Habilitando serviço no Systemd
+     systemd:
+      name: docker
+      enabled: yes
+
+   - name: Add the user 'docker' with a specific uid and a primary group of 'jenkins'
+     user:
+      name: docker
+      group: jenkins 
+
+   - name: Download imagem jenkins
+     docker_image:
+       name: jenkins/jenkins      
+       pull: yes
+
+   - name: Create Jenkins Container
+     docker_container:
+       name: jenkins
+       image: jenkins/jenkins
+       ports: "8080:8080"
+       volumes:
+         -  /home/jenkins/jenkins-data
+   
